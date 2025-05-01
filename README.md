@@ -1,6 +1,6 @@
 # Anilay - Animated (Audio) Overlay
 
-![Analay Logo](logo.svg)
+![Analay Logo](/assets/logo.svg)
 
 Anilay is a desktop application written in Python that displays animated overlays that react to your microphone input.  
 Perfect for streamers, content creators, and anyone who wants to add visual indicators when they're speaking or screaming their heart out.
@@ -40,7 +40,7 @@ sudo pacman -S python-pip python-gobject python-cairo gtk3 portaudio
 2. Clone the repository:
 
 ```bash
-git clone https://github.com/ImDuck42/anilay.git
+git clone https://github.com/ImDuck42/Anilay.git
 cd anilay
 ```
 
