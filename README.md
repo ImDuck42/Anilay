@@ -12,7 +12,7 @@ Perfect for streamers, content creators, and anyone who wants to add visual indi
 - **Customizable**: Create your own skins with custom images and positioning
 - **Dynamic Movement**: Images can move around based on audio input
 - **Lightweight**: Minimal CPU and memory usage
-- **Platform Support**: Currently works on Linux ~~(Windows support coming soon)~~
+- **Platform Support**: Currently works on Linux [~~(Windows support coming soon)~~](/MaybeWorking/AnilayWindows.py)
 
 ## Installation
 
