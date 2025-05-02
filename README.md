@@ -16,9 +16,9 @@ Perfect for streamers, content creators, and anyone who wants to add visual indi
 
 ## Known Issues
 
-- **Positioning**: The  first time it detects sound after beeing draged, it jumps (now a feature)
+- **Positioning**: The  first time it detects sound after beeing dragged, it jumps (now a feature)
     - CLick the image to confirm the position
-- **Configuration**: Dynamicly adding does not work since i hardcoded states :KEKW:
+- **Configuration**: Dynamicly adding does not work since I hardcoded states :KEKW:
 
 ## Installation
 
