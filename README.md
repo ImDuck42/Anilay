@@ -91,7 +91,6 @@ rate = 44100
 chunk = 1024
 channels = 1
 silence_timeout = 0.5
-threshold = 50
 
 [Thresholds]
 default = 5
@@ -104,8 +103,8 @@ screaming = 2000
 image = normal.png
 max_width = 100
 max_height = 100
-x_offset = 0
-y_offset = 0
+x_offset = 50
+y_offset = 50
 
 [Display_talking]
 image = talking.png
@@ -130,7 +129,6 @@ y_offset = -20  # Move 20 pixels up when screaming
 - `chunk`: Audio buffer size
 - `channels`: Number of audio channels (1 for mono)
 - `silence_timeout`: Time in seconds before returning to default state
-- `threshold`: Base audio detection threshold
 
 #### Thresholds Section
 - `default`: Sound level for default state
