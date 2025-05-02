@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# Linux ONLY version of Anilay
 
 import os, gi, sys, time, pyaudio, logging, argparse, threading, numpy as np, configparser
 from pathlib import Path
@@ -16,7 +17,7 @@ from gi.repository import Gtk, Gdk, GdkPixbuf, GLib
 
 # Default configuration dictionary
 DEFAULT_CONFIG = {
-    "Audio": {"rate": "44100", "chunk": "1024", "channels": "1", "threshold": "50", "silence_timeout": "0.5"},
+    "Audio": {"rate": "44100", "chunk": "1024", "channels": "1", "silence_timeout": "0.5"},
     "Thresholds": {"default": "5", "talking": "20", "screaming": "2000"},
     "Display": {
         "default": {"image": "normal.png", "max_width": "100", "max_height": "100", "x_offset": "50", "y_offset": "50"},
@@ -102,7 +103,6 @@ class Config:
             'rate': int(section.get('rate')),
             'chunk': int(section.get('chunk')),
             'channels': int(section.get('channels')),
-            'threshold': int(section.get('threshold')),
             'silence_timeout': float(section.get('silence_timeout'))
         }
     
@@ -142,7 +142,7 @@ class Config:
 
 @contextmanager
 def audio_stream(p_audio, **kwargs):
-    """Context manager for audio stream to ensure proper resource cleanup"""
+    # Context manager for audio stream to ensure proper resource cleanup
     stream = p_audio.open(**kwargs)
     try:
         yield stream
@@ -163,7 +163,7 @@ class AudioProcessor:
         self.current_mode = "default"
     
     def start(self) -> None:
-        """Start the audio processing thread"""
+        # Start the audio processing thread
         if self.thread and self.thread.is_alive():
             return
             
@@ -174,7 +174,7 @@ class AudioProcessor:
         logger.info("Audio detection thread started")
     
     def stop(self) -> None:
-        """Stop the audio processing thread and clean up resources"""
+        # Stop the audio processing thread and clean up resources
         if not self.running:
             return
             
@@ -186,7 +186,7 @@ class AudioProcessor:
         logger.info("Audio processor stopped")
     
     def _audio_detection_thread(self) -> None:
-        """Thread function to detect audio input"""
+        # Thread function to detect audio input
         try:
             self.p = pyaudio.PyAudio()
             
@@ -314,7 +314,7 @@ class TransparentWindow(Gtk.Window):
         return True
         
     def _update_position_after_drag(self) -> bool:
-        """Update stored position after user drags the window"""
+        # Update stored position after user drags the window
         if self.get_window() and self.get_window().is_visible():
             self.base_position = self.get_position()
             self.current_position = self.base_position
@@ -322,7 +322,7 @@ class TransparentWindow(Gtk.Window):
         return False  # Don't repeat
 
     def load_image(self, image_path: str) -> None:
-        """Load an image or animation from the given path"""
+        # Load an image or animation from the given path
         if self.current_image_path == image_path:
             return  # Don't reload if it's the same image
             
@@ -368,7 +368,7 @@ class TransparentWindow(Gtk.Window):
             logger.error(f"Unexpected error loading image {image_path}: {e}")
 
     def _scale_pixbuf(self, pixbuf) -> GdkPixbuf.Pixbuf:
-        """Scale the pixbuf to fit within max dimensions"""
+        # Scale the pixbuf to fit within max dimensions
         width = pixbuf.get_width()
         height = pixbuf.get_height()
         
@@ -382,7 +382,7 @@ class TransparentWindow(Gtk.Window):
         return pixbuf.scale_simple(new_width, new_height, GdkPixbuf.InterpType.BILINEAR)
 
     def _start_animation_loop(self, iter) -> None:
-        """Start the animation loop for GIFs"""
+        # Start the animation loop for GIFs
         if self.frame_timeout_id:
             GLib.source_remove(self.frame_timeout_id)
             self.frame_timeout_id = None
@@ -406,12 +406,11 @@ class TransparentWindow(Gtk.Window):
         update_animation()
 
     def position_window(self, initial_placement: bool = False) -> None:
-        """Position the window based on display configuration
-        
-        Args:
-            initial_placement: If True, places window at default position.
-                              If False, adjusts position relative to current position.
-        """
+        #   Position the window based on display configuration
+        #   
+        #   Args:
+        #       initial_placement:  If True, places window at default position.
+        #                           If False, adjusts position relative to current position.
         display = Gdk.Display.get_default()
         
         # Get the monitor geometry
@@ -439,7 +438,7 @@ class TransparentWindow(Gtk.Window):
             self.apply_offset_for_mode()
 
     def apply_offset_for_mode(self) -> None:
-        """Apply the x and y offsets for the current mode"""
+        # Apply the x and y offsets for the current mode
         # Get the offsets for the current mode
         x_offset = self.display_config['x_offset']
         y_offset = self.display_config['y_offset']
@@ -460,7 +459,7 @@ class TransparentWindow(Gtk.Window):
         logger.debug(f"Applied offset for mode {self.current_mode}, position now {new_x}, {new_y}")
 
     def set_mode(self, mode: str) -> None:
-        """Set the display mode and update the image"""
+        # Set the display mode and update the image
         if mode == self.current_mode:
             return
             
@@ -480,18 +479,18 @@ class TransparentWindow(Gtk.Window):
         logger.debug(f"Mode changed from {old_mode} to {mode}")
     
     def on_destroy(self, widget) -> None:
-        """Handle window destruction"""
+        # Handle window destruction
         self.cleanup()
         Gtk.main_quit()
 
     def start(self) -> None:
-        """Start the window and audio processor"""
+        # Start the window and audio processor
         self.show_all()
         self.running = True
         self.audio_processor.start()
 
     def cleanup(self) -> None:
-        """Cleanup resources on exit"""
+        # Cleanup resources on exit
         logger.info("Cleaning up resources...")
         self.running = False
         
@@ -505,13 +504,13 @@ class TransparentWindow(Gtk.Window):
             self.frame_timeout_id = None
 
 def setup_signal_handlers(window: TransparentWindow) -> None:
-    """Setup signal handlers for proper termination"""
+    # Setup signal handlers for proper termination
     if hasattr(GLib, 'unix_signal_add'):
         GLib.unix_signal_add(GLib.PRIORITY_DEFAULT, 2, lambda: (window.destroy(), True))  # SIGINT
         GLib.unix_signal_add(GLib.PRIORITY_DEFAULT, 15, lambda: (window.destroy(), True))  # SIGTERM
 
 def main() -> None:
-    """Main function to parse arguments and start the application"""
+    # Main function to parse arguments and start the application
     # Set application name for proper window management
     GLib.set_application_name("Anilay")
     

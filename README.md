@@ -14,6 +14,10 @@ Perfect for streamers, content creators, and anyone who wants to add visual indi
 - **Lightweight**: Minimal CPU and memory usage
 - **Platform Support**: Currently works on Linux [~~(Windows support coming soon)~~](/MaybeWorking/AnilayWindows.py)
 
+## Known Issues
+
+- **Positioning**: The  first time it detects sound after beeing draged, it jumps in direction of the top left corner
+
 ## Installation
 
 ### Prerequisites

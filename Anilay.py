@@ -17,7 +17,7 @@ from gi.repository import Gtk, Gdk, GdkPixbuf, GLib
 
 # Default configuration dictionary
 DEFAULT_CONFIG = {
-    "Audio": {"rate": "44100", "chunk": "1024", "channels": "1", "threshold": "50", "silence_timeout": "0.5"},
+    "Audio": {"rate": "44100", "chunk": "1024", "channels": "1", "silence_timeout": "0.5"},
     "Thresholds": {"default": "5", "talking": "20", "screaming": "2000"},
     "Display": {
         "default": {"image": "normal.png", "max_width": "100", "max_height": "100", "x_offset": "50", "y_offset": "50"},
@@ -103,7 +103,6 @@ class Config:
             'rate': int(section.get('rate')),
             'chunk': int(section.get('chunk')),
             'channels': int(section.get('channels')),
-            'threshold': int(section.get('threshold')),
             'silence_timeout': float(section.get('silence_timeout'))
         }
     
