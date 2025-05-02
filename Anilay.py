@@ -17,8 +17,8 @@ from gi.repository import Gtk, Gdk, GdkPixbuf, GLib
 
 # Default configuration dictionary
 DEFAULT_CONFIG = {
-    "Audio": {"rate": "44100", "chunk": "1024", "channels": "1", "silence_timeout": "0.5"},
-    "Thresholds": {"default": "5", "talking": "20", "screaming": "2000"},
+    "Audio": {"rate": "44100", "chunk": "1024", "channels": "1", "silence_timeout": "0.1"},
+    "Thresholds": {"default": "15", "talking": "50", "screaming": "2000"},
     "Display": {
         "default": {"image": "normal.png", "max_width": "100", "max_height": "100", "x_offset": "50", "y_offset": "50"},
         "talking": {"image": "talking.png", "max_width": "100", "max_height": "100", "x_offset": "0", "y_offset": "-10"},
