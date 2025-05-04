@@ -420,12 +420,11 @@ class TransparentWindow(Gtk.Window):
             monitor = display.get_monitor(0)
         
         geometry = monitor.get_geometry()
-        win_width, win_height = self.get_size()
         
         if initial_placement or not self.get_window() or not self.get_window().is_visible():
             # Initial placement based on monitor geometry
-            x = geometry.x + geometry.width - win_width - self.display_config['x_offset']
-            y = geometry.y + geometry.height - win_height - self.display_config['y_offset']
+            x = geometry.x + geometry.width - self.display_config['max_width'] - self.display_config['x_offset']
+            y = geometry.y + geometry.height - self.display_config['max_height'] - self.display_config['y_offset']
             
             # Store this as our base position
             self.base_position = (x, y)
