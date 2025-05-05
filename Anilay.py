@@ -29,36 +29,36 @@ logger = logging.getLogger('Anilay')
 # Default configuration
 DEFAULT_CONFIG = {
     "Audio": {
-        "rate": "44100", 
-        "chunk": "1024", 
-        "channels": "1", 
+        "rate": "44100",
+        "chunk": "1024",
+        "channels": "1",
         "silence_timeout": "0.1"
     },
     "Thresholds": {
-        "default": "15", 
-        "talking": "50", 
+        "default": "15",
+        "talking": "50",
         "screaming": "2000"
     },
     "Display": {
         "default": {
-            "image": "normal.png", 
-            "max_width": "100", 
-            "max_height": "100", 
-            "x_offset": "50", 
+            "image": "normal.png",
+            "max_width": "100",
+            "max_height": "100",
+            "x_offset": "50",
             "y_offset": "50"
         },
         "talking": {
-            "image": "talking.png", 
-            "max_width": "100", 
-            "max_height": "100", 
-            "x_offset": "0", 
+            "image": "talking.png",
+            "max_width": "100",
+            "max_height": "100",
+            "x_offset": "0",
             "y_offset": "-10"
         },
         "screaming": {
-            "image": "screaming.png", 
-            "max_width": "100", 
-            "max_height": "100", 
-            "x_offset": "0", 
+            "image": "screaming.png",
+            "max_width": "100",
+            "max_height": "100",
+            "x_offset": "0",
             "y_offset": "-25"
         }
     }
@@ -165,7 +165,7 @@ class ConfigManager:
             'channels': int(section.get('channels')),
             'silence_timeout': float(section.get('silence_timeout'))
         }
-    
+
     def get_thresholds(self) -> Dict[str, int]:
         """Get audio volume thresholds for different states."""
         section = self.config['Thresholds']
@@ -174,22 +174,22 @@ class ConfigManager:
             'talking': int(section.get('talking')),
             'screaming': int(section.get('screaming'))
         }
-    
+
     def get_display_config(self, mode: str = "default") -> Dict[str, Any]:
         """Get display configuration for the specified mode."""
         section_name = f"Display_{mode}"
-        
+
         if not self.config.has_section(section_name):
             logger.warning(f"Display mode {mode} not found, using default")
             section_name = "Display_default"
-        
+
         section = self.config[section_name]
-        
+
         # Resolve paths relative to skin directory
         image_path = section.get('image')
         if not os.path.isabs(image_path):
             image_path = os.path.join(self.skin_path, image_path)
-        
+
         return {
             'image': image_path,
             'max_width': int(section.get('max_width', 100)),
@@ -197,16 +197,16 @@ class ConfigManager:
             'x_offset': int(section.get('x_offset', 50)),
             'y_offset': int(section.get('y_offset', 50))
         }
-    
+
     def get_all_display_modes(self) -> list:
         """Get list of all configured display modes."""
-        return [section[8:] for section in self.config.sections() 
+        return [section[8:] for section in self.config.sections()
                 if section.startswith("Display_")]
 
 
 class AudioProcessor:
     """Processes microphone input to detect sound levels."""
-    
+
     def __init__(self, config: ConfigManager, on_mode_change: Callable[[str], None]):
         self.audio_config = config.get_audio_config()
         self.thresholds = config.get_thresholds()
@@ -216,35 +216,35 @@ class AudioProcessor:
         self.thread = None
         self.last_active_time = 0
         self.current_mode = "default"
-    
+
     def start(self) -> None:
         """Start the audio processing thread."""
         if self.thread and self.thread.is_alive():
             return
-            
+
         self.running = True
         self.thread = threading.Thread(target=self._audio_detection_loop)
         self.thread.daemon = True
         self.thread.start()
         logger.info("Audio detection thread started")
-    
+
     def stop(self) -> None:
         """Stop the audio processing thread and clean up resources."""
         if not self.running:
             return
-            
+
         self.running = False
-        
+
         if self.thread and self.thread.is_alive():
             self.thread.join(1.0)
-            
+
         logger.info("Audio processor stopped")
-    
+
     def _audio_detection_loop(self) -> None:
         """Continuously monitor audio input and detect volume changes."""
         try:
             self.audio = pyaudio.PyAudio()
-            
+
             stream_params = {
                 'format': pyaudio.paInt16,
                 'channels': self.audio_config['channels'],
@@ -252,38 +252,38 @@ class AudioProcessor:
                 'input': True,
                 'frames_per_buffer': self.audio_config['chunk']
             }
-            
+
             with audio_stream(self.audio, **stream_params) as stream:
                 chunk_size = self.audio_config['chunk']
                 silence_timeout = self.audio_config['silence_timeout']
-                
+
                 while self.running:
                     try:
                         # Read audio data
                         data = np.frombuffer(
-                            stream.read(chunk_size, exception_on_overflow=False), 
+                            stream.read(chunk_size, exception_on_overflow=False),
                             dtype=np.int16
                         )
-                        
+
                         # Calculate volume (RMS)
                         volume = np.sqrt(np.mean(np.square(data.astype(np.float32))))
-                        
+
                         # Determine mode based on volume
                         new_mode = self._get_mode_for_volume(volume)
                         self._update_mode_if_needed(new_mode, silence_timeout)
-                            
+
                     except IOError as e:
                         logger.warning(f"Audio stream IOError: {e}")
                         time.sleep(0.1)
                     except Exception as e:
                         logger.error(f"Error in audio detection: {e}")
                         time.sleep(0.5)
-                        
+
         except Exception as e:
             logger.error(f"Fatal error in audio thread: {e}")
         finally:
             self._cleanup_audio()
-    
+
     def _get_mode_for_volume(self, volume: float) -> str:
         """Determine the appropriate mode based on volume level."""
         if volume > self.thresholds['screaming']:
@@ -291,7 +291,7 @@ class AudioProcessor:
         elif volume > self.thresholds['talking']:
             return "talking"
         return "default"
-    
+
     def _update_mode_if_needed(self, new_mode: str, silence_timeout: float) -> None:
         """Update the current mode if needed based on audio state."""
         if new_mode != "default":
@@ -302,7 +302,7 @@ class AudioProcessor:
         elif (time.time() - self.last_active_time) > silence_timeout and self.current_mode != "default":
             self.current_mode = "default"
             GLib.idle_add(self.on_mode_change, "default")
-    
+
     def _cleanup_audio(self) -> None:
         """Clean up PyAudio resources."""
         if self.audio:
@@ -315,10 +315,10 @@ class AudioProcessor:
 
 class AnilayWindow(Gtk.Window):
     """Main transparent window that displays the current state image."""
-    
+
     def __init__(self, config: ConfigManager):
         Gtk.Window.__init__(self, title="Anilay")
-        
+
         # Store configuration and state
         self.config = config
         self.current_mode = "default"
@@ -329,20 +329,20 @@ class AnilayWindow(Gtk.Window):
         self.initial_position_set = False
         self.base_position = (0, 0)
         self.current_position = (0, 0)
-        
+
         self._setup_window_properties()
         self._connect_signal_handlers()
-        
+
         # Create image container
         self.image = Gtk.Image()
         self.add(self.image)
-        
+
         # Initialize audio processor
         self.audio_processor = AudioProcessor(self.config, self.set_mode)
-        
+
         # Load the default image
         self.load_image(self.display_config['image'])
-    
+
     def _setup_window_properties(self) -> None:
         """Configure window properties for always-on-top transparent window."""
         self.set_keep_above(True)
@@ -352,18 +352,18 @@ class AnilayWindow(Gtk.Window):
         self.set_accept_focus(False)
         self.set_resizable(False)
         self.stick()  # Make visible across all workspaces
-        
+
         # Make window transparent
         self.set_app_paintable(True)
         self._setup_visual()
-    
+
     def _setup_visual(self, widget=None, previous_screen=None) -> None:
         """Set up the visual for transparency support."""
         screen = self.get_screen()
         visual = screen.get_rgba_visual()
         if visual and screen.is_composited():
             self.set_visual(visual)
-    
+
     def _connect_signal_handlers(self) -> None:
         """Connect GTK event signals to handler methods."""
         self.connect("draw", self._on_draw)
@@ -377,7 +377,7 @@ class AnilayWindow(Gtk.Window):
         cr.set_operator(1)  # Clear operator
         cr.paint()
         return False
-    
+
     def _on_button_press(self, widget, event) -> bool:
         """Handle mouse button clicks for window dragging."""
         if event.button == 1:  # Left mouse button
@@ -385,7 +385,7 @@ class AnilayWindow(Gtk.Window):
             # Update our stored position after the move completes
             GLib.timeout_add(100, self._update_position_after_drag)
         return True
-        
+
     def _update_position_after_drag(self) -> bool:
         """Store the new window position after user drag is completed."""
         if self.get_window() and self.get_window().is_visible():
@@ -398,20 +398,20 @@ class AnilayWindow(Gtk.Window):
         """Load and display an image or animation from the given path."""
         if self.current_image_path == image_path:
             return  # Don't reload if it's the same image
-            
+
         self.current_image_path = image_path
-        
+
         try:
             path = Path(image_path)
             if not path.exists():
                 logger.error(f"Image file not found: {image_path}")
                 return
-                
+
             if path.suffix.lower() == '.gif':
                 self._load_animation(path)
             else:
                 self._load_static_image(path)
-            
+
             # Position the window after loading the image
             if not self.initial_position_set:
                 self.position_window(initial_placement=True)
@@ -419,17 +419,17 @@ class AnilayWindow(Gtk.Window):
             else:
                 # Apply offsets for the current mode
                 self.apply_offset_for_mode()
-            
+
         except GLib.Error as e:
             logger.error(f"Error loading image {image_path}: {e}")
         except Exception as e:
             logger.error(f"Unexpected error loading image {image_path}: {e}")
-    
+
     def _load_animation(self, path: Path) -> None:
         """Load an animated GIF file."""
         animation = GdkPixbuf.PixbufAnimation.new_from_file(str(path))
         self.image.set_from_animation(animation)
-        
+
         if not animation.is_static_image():
             self._start_animation_loop(animation.get_iter(None))
         else:
@@ -438,7 +438,7 @@ class AnilayWindow(Gtk.Window):
             pixbuf = self._scale_pixbuf(pixbuf)
             self.image.set_from_pixbuf(pixbuf)
             self.resize(pixbuf.get_width(), pixbuf.get_height())
-    
+
     def _load_static_image(self, path: Path) -> None:
         """Load a static image file."""
         pixbuf = GdkPixbuf.Pixbuf.new_from_file(str(path))
@@ -450,7 +450,7 @@ class AnilayWindow(Gtk.Window):
         """Scale the pixbuf to fit within max dimensions while maintaining aspect ratio."""
         width = pixbuf.get_width()
         height = pixbuf.get_height()
-        
+
         max_width = self.display_config['max_width']
         max_height = self.display_config['max_height']
 
@@ -458,7 +458,7 @@ class AnilayWindow(Gtk.Window):
         scale_factor = min(max_width / width, max_height / height)
         if scale_factor >= 1:  # Don't upscale
             return pixbuf
-            
+
         new_width = int(width * scale_factor)
         new_height = int(height * scale_factor)
         return pixbuf.scale_simple(new_width, new_height, GdkPixbuf.InterpType.BILINEAR)
@@ -468,46 +468,46 @@ class AnilayWindow(Gtk.Window):
         if self.frame_timeout_id:
             GLib.source_remove(self.frame_timeout_id)
             self.frame_timeout_id = None
-        
+
         def update_animation():
             if not self.running:
                 return False
-                
+
             pixbuf = iter.get_pixbuf()
             scaled_pixbuf = self._scale_pixbuf(pixbuf)
             self.image.set_from_pixbuf(scaled_pixbuf)
-            
+
             delay = max(iter.get_delay_time(), 10)  # Ensure minimum delay
             iter.advance()
-            
+
             # Schedule next frame
             self.frame_timeout_id = GLib.timeout_add(delay, update_animation)
             return False
-        
+
         # Start first frame
         update_animation()
 
     def position_window(self, initial_placement: bool = False) -> None:
         """Position the window based on display configuration."""
         display = Gdk.Display.get_default()
-        
+
         # Get the monitor geometry
         if self.get_window() and self.get_window().is_visible():
             monitor = display.get_monitor_at_window(self.get_window())
         else:
             monitor = display.get_monitor(0)
-        
+
         geometry = monitor.get_geometry()
-        
+
         if initial_placement or not self.get_window() or not self.get_window().is_visible():
             # Initial placement based on monitor geometry
             x = geometry.x + geometry.width - self.display_config['max_width'] - self.display_config['x_offset']
             y = geometry.y + geometry.height - self.display_config['max_height'] - self.display_config['y_offset']
-            
+
             # Store this as our base position
             self.base_position = (x, y)
             self.current_position = (x, y)
-            
+
             self.move(x, y)
             logger.debug(f"Set initial position to {x}, {y}")
         else:
@@ -518,7 +518,7 @@ class AnilayWindow(Gtk.Window):
         """Apply the x and y offsets for the current mode."""
         x_offset = self.display_config['x_offset']
         y_offset = self.display_config['y_offset']
-        
+
         # Calculate new position with offsets
         if self.current_mode == "default":
             # Return to base position for default mode
@@ -528,7 +528,7 @@ class AnilayWindow(Gtk.Window):
             base_x, base_y = self.base_position
             new_x = base_x + x_offset
             new_y = base_y + y_offset
-        
+
         # Update current position and move window
         self.current_position = (new_x, new_y)
         self.move(new_x, new_y)
@@ -538,22 +538,22 @@ class AnilayWindow(Gtk.Window):
         """Set the display mode and update the image."""
         if mode == self.current_mode:
             return
-            
+
         # Update mode and configuration
         old_mode = self.current_mode
         self.current_mode = mode
         self.display_config = self.config.get_display_config(mode)
-        
+
         # Stop animation if playing
         if self.frame_timeout_id:
             GLib.source_remove(self.frame_timeout_id)
             self.frame_timeout_id = None
-        
+
         # Update the image and apply offsets
         self.load_image(self.display_config['image'])
-        
+
         logger.debug(f"Mode changed from {old_mode} to {mode}")
-    
+
     def _on_destroy(self, widget) -> None:
         """Handle window destruction."""
         self.cleanup()
@@ -569,11 +569,11 @@ class AnilayWindow(Gtk.Window):
         """Cleanup resources on exit."""
         logger.info("Cleaning up resources...")
         self.running = False
-        
+
         # Stop audio processing
         if hasattr(self, 'audio_processor'):
             self.audio_processor.stop()
-        
+
         # Remove any pending animation timeouts
         if self.frame_timeout_id:
             GLib.source_remove(self.frame_timeout_id)
@@ -593,11 +593,11 @@ def validate_skin_path(skin_path: str) -> str:
     if not os.path.isdir(abs_path):
         logger.error(f"Skin folder not found: {abs_path}")
         sys.exit(1)
-    
+
     if not abs_path.endswith('.al'):
         logger.error(f"Skin folder must end with '.al': {abs_path}")
         sys.exit(1)
-    
+
     return abs_path
 
 
@@ -605,24 +605,24 @@ def main() -> None:
     """Main function to parse arguments and start the application."""
     # Set application name for proper window management
     GLib.set_application_name("Anilay")
-    
+
     # Parse command line arguments
     parser = argparse.ArgumentParser(
         description="Anilay - Shows a visual indicator when microphone detects sound"
     )
     parser.add_argument('--skin', required=True, help="Path to the skin folder")
     args = parser.parse_args()
-    
+
     # Validate skin path
     skin_path = validate_skin_path(args.skin)
     logger.info(f"Using skin: {skin_path}")
-    
+
     # Initialize configuration
     config = ConfigManager(skin_path)
-    
+
     # Initialize and run
     window = AnilayWindow(config)
-    
+
     try:
         setup_signal_handlers(window)
         window.start()
