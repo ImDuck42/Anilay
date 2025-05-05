@@ -8,7 +8,7 @@ A lightweight application that shows animated indicators when microphone activit
 import os, sys, time, logging, argparse, threading,configparser
 from pathlib import Path
 from contextlib import contextmanager
-from typing import Dict, Any, Callable, Optional
+from typing import Dict, Callable, Any
 
 import numpy as np
 import pyaudio
@@ -21,7 +21,7 @@ from gi.repository import Gtk, Gdk, GdkPixbuf, GLib
 
 # Configure logging
 logging.basicConfig(
-    level=logging.INFO,
+    level=logging.DEBUG,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger('Anilay')
